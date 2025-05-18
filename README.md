@@ -1,36 +1,41 @@
-# AnalyticORM
+# SemanticORM (JS/TS)
 
-Uma biblioteca leve e extensível para definição de modelos analíticos e geração dinâmica de queries estruturadas. Inspirada no Cube.js, mas com foco em simplicidade, integração flexível e uso como uma camada semântica desacoplada.
+**SemanticORM** é uma biblioteca leve e extensível para definição programável de **modelos analíticos** e geração de **queries dinâmicas estruturadas**. Inspirada no Cube.js, mas com foco em simplicidade, flexibilidade de integração e uso como uma **camada semântica desacoplada e interoperável**.
 
-> **Objetivo:** transformar consultas analíticas complexas em uma interface declarativa, reutilizável e orientada a modelo — como um ORM, mas para análise de dados.
+> É como um ORM — mas para análise de dados: define medidas, dimensões e filtros, gera SQL sob demanda, e exporta para múltiplas ferramentas de BI e visualização.
 
 ---
 
 ## ✨ Principais Funcionalidades
 
-- Definição de modelos com medidas, dimensões e filtros
-- Geração de consultas dinâmicas (ex: BigQuery, PostgreSQL)
-- Suporte a séries temporais, agrupamentos e filtros condicionais
-- Interface programável: `.sum()`, `.avg()`, `.groupBy()`, `.timeSeries()`
-- Design modular para integração com pipelines, APIs ou dashboards
+- Definição de modelos com **medidas, dimensões, filtros e fonte**
+- Geração de SQL por dialetos (`bigquery`, `postgresql`, `duckdb`)
+- Exportação de modelos para:
+  - Looker (LookML)
+  - Superset (YAML)
+  - Metabase (JSON)
+  - GraphQL (SDL)
+  - Markdown
+- Importação automática de modelos a partir de arquivos YAML do dbt
+- Suporte ao formato JSON semântico compatível com múltiplas ferramentas
+- Integração com APIs, SSR, dashboards, pipelines ou visualizações
 
 ---
 
 ## 🚀 Instalação
 
-(em breve no npm)
-
-```
-npm install analytic-orm
+```bash
+npm install semantic-orm
 ```
 
 ---
 
-## 🧠 Conceitos
+## 🧠 Conceito
 
 ```ts
 Indicador.define({
   nome: 'acesso_saneamento',
+  fonte: 'fato_indicadores',
   medidas: {
     media: { tipo: 'avg', campo: 'valor' },
     total: { tipo: 'sum', campo: 'valor' }
@@ -55,16 +60,17 @@ const query = Indicador
   .groupBy('ano', 'municipio')
   .filter({ categoria: 'infraestrutura' })
   .timeSeries('ano')
-  .buildSQL('bigquery'); // ou 'postgresql'
+  .buildSQL('bigquery');
 ```
 
-Resultado esperado:
+Resultado:
+
 ```sql
 SELECT
   EXTRACT(YEAR FROM data_referencia) AS ano,
   localidade_id AS municipio,
   AVG(valor) AS media
-FROM indicadores
+FROM fato_indicadores
 WHERE categoria = 'infraestrutura'
 GROUP BY ano, municipio
 ORDER BY ano
@@ -72,13 +78,36 @@ ORDER BY ano
 
 ---
 
-## 🧩 Roadmap
+## 🧩 Exportações suportadas
 
-- [ ] Conectores BigQuery e PostgreSQL
-- [ ] Suporte a joins e modelos compostos
-- [ ] Tradução de queries para JSON (modo explain/debug)
-- [ ] Ferramentas de validação e inferência de esquema
-- [ ] CLI opcional para scaffolding de modelos
+```ts
+import {
+  exportLookML,
+  exportSupersetYAML,
+  exportMetabaseJSON,
+  exportGraphQLSchema,
+  exportMarkdownDoc
+} from 'semantic-orm/export';
+
+const model = Indicador.getModel();
+
+fs.writeFileSync('indicador.view.lkml', exportLookML(model));
+fs.writeFileSync('indicador_superset.yaml', exportSupersetYAML(model));
+fs.writeFileSync('indicador_metabase.json', exportMetabaseJSON(model));
+fs.writeFileSync('indicador.graphql', exportGraphQLSchema(model));
+fs.writeFileSync('indicador.md', exportMarkdownDoc(model));
+```
+
+---
+
+## 🔁 Interoperabilidade via JSON
+
+```ts
+Indicador.loadFromJson('modelo_semantico.json');
+Indicador.exportToJson('modelo_semantico.json');
+```
+
+Esse JSON pode ser compartilhado com a versão Python do `semanticorm` ou usado em pipelines externas.
 
 ---
 
@@ -89,16 +118,41 @@ src/
   ├── models/
   │     └── Indicador.ts
   ├── engine/
-  │     ├── builder.ts
-  │     └── dialects/
-  │           ├── bigquery.ts
-  │           └── postgresql.ts
+  │     └── builder.ts
+  ├── dialects/
+  │     ├── bigquery.ts
+  │     └── postgresql.ts
+  ├── export/
+  │     ├── looker.ts
+  │     ├── superset.ts
+  │     ├── metabase.ts
+  │     ├── graphql.ts
+  │     └── markdown.ts
+  ├── tools/
+  │     └── parseDbtYaml.ts
   ├── types/
   └── index.ts
 ```
 
 ---
 
+## 🛣️ Roadmap
+
+- [x] Geração de SQL sob demanda
+- [x] Exportação LookML, Superset, Metabase
+- [x] Exportação GraphQL + Markdown
+- [x] JSON interoperável entre JS/TS e Python
+- [ ] CLI para scaffolding de modelos e preview
+- [ ] UI visual para criação de modelos analíticos
+
+---
+
 ## 📜 Licença
 
 MIT
+
+---
+
+## 🤝 Contribuições
+
+PRs, sugestões e feedbacks são bem-vindos! O objetivo é construir uma camada semântica moderna, programável e aberta — conectando dados a decisões com simplicidade e poder.
