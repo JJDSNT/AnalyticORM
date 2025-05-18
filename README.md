@@ -121,7 +121,8 @@ src/
   │     └── builder.ts
   ├── dialects/
   │     ├── bigquery.ts
-  │     └── postgresql.ts
+  │     ├── postgresql.ts
+  │     └── duckdb.ts
   ├── export/
   │     ├── looker.ts
   │     ├── superset.ts
